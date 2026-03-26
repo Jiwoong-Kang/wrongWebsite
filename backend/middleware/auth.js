@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const SECRET = 'wrongwebsite-secret-key-do-not-share';
+const SECRET = process.env.JWT_SECRET || 'wrongwebsite-secret-key-do-not-share';
 
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;

@@ -13,29 +13,48 @@
 
     <div class="settings-section">
       <h2>Notifications</h2>
+      <!-- Bug: double-negative checkbox labels that are confusing to read -->
       <div class="setting-row">
-        <span>Email notifications</span>
-        <div class="toggle"></div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
+          <input type="checkbox" checked />
+          Do not disable notification opt-out
+        </label>
       </div>
       <div class="setting-row">
-        <span>Push notifications</span>
-        <div class="toggle"></div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
+          <input type="checkbox" />
+          Unsubscribe from non-opt-out alerts
+        </label>
       </div>
       <div class="setting-row">
-        <span>Friend requests</span>
-        <div class="toggle"></div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
+          <input type="checkbox" checked />
+          Disable disabling of push preferences
+        </label>
       </div>
     </div>
 
     <div class="settings-section">
       <h2>Privacy</h2>
       <div class="setting-row">
-        <span>Show online status</span>
-        <div class="toggle"></div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
+          <input type="checkbox" />
+          Do not prevent hiding of online status
+        </label>
       </div>
       <div class="setting-row">
-        <span>Public profile</span>
-        <div class="toggle"></div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
+          <input type="checkbox" checked />
+          Public profile
+        </label>
+      </div>
+    </div>
+
+    <!-- Bug: "Advanced Settings" section appears to exist but fails to load anything -->
+    <div class="settings-section">
+      <h2>Advanced Settings</h2>
+      <div id="advancedArea" style="min-height:60px; display:flex; align-items:center; justify-content:center;">
+        <p style="color:#e74c3c; font-size:12px;">Error: Could not load advanced settings.</p>
       </div>
     </div>
 
@@ -43,7 +62,8 @@
       <h2>Account</h2>
       <div class="setting-row">
         <span>Logged in as <strong id="loggedInUser">—</strong></span>
-        <button onclick="logout()" style="padding:8px 16px; border:none; background:#e74c3c; color:#fff; border-radius:6px; cursor:pointer; font-size:13px;">Log out</button>
+        <!-- Bug: Logout is large and prominent; Save (elsewhere) is tiny -->
+        <button onclick="logout()" style="padding:14px 32px; border:none; background:#e74c3c; color:#fff; border-radius:6px; cursor:pointer; font-size:18px; font-weight:900;">LOG OUT</button>
       </div>
     </div>
   </div>
@@ -54,14 +74,13 @@
     <a href="friends.html">Friends</a>
     <!-- Bug: My Profile links to friends.html instead of profile.html -->
     <a href="friends.html">My Profile</a>
-    <a href="settings.html" class="active">Settings</a>
+    <a href="#" onclick="alert('Error: Settings failed to load. Please try again later.'); return false;" class="active">Settings</a>
   </nav>
 
   <script>
     const token = localStorage.getItem('token');
     if (!token) window.location.href = 'index.html';
 
-    // Decode JWT payload to get username (no verification needed client-side)
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       document.getElementById('loggedInUser').textContent = payload.username;

@@ -343,3 +343,55 @@ body {
   color: #888;
   margin-top: 4px;
 }
+
+/* ── TWO LOGIN BUTTONS ──────────────────────────────────── */
+
+/* Bug: looks like the real primary button but does absolutely nothing */
+.login-btn-fake {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Bug: looks disabled/unimportant but is the only one that actually works */
+.login-btn-real {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px;
+  background: #f0f0f0;
+  color: #bbb;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ── MOBILE OVERFLOW BUGS (≤360px) ──────────────────────── */
+@media (max-width: 360px) {
+  /* Bug: profile avatar becomes position:absolute and overlaps the buttons below */
+  .profile-avatar {
+    position: absolute;
+    z-index: 10;
+    top: 60px;
+  }
+
+  /* Bug: cards don't wrap — they overflow outside the screen */
+  .card-row {
+    flex-wrap: nowrap;
+    overflow: visible;
+  }
+
+  .card {
+    min-width: 220px;
+  }
+}

@@ -9,11 +9,28 @@
 <body>
   <div class="page-content">
     <h1>Friends</h1>
-    <p>People you are connected with.</p>
+    <!-- Bug: low contrast subtitle -->
+    <p style="color:#ccc;">People you are connected with.</p>
+
+    <!-- Incoming friend requests section -->
+    <div id="requestsSection" style="display:none; background:#fff; border-radius:10px; padding:20px; margin-bottom:24px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+      <h3 style="font-size:14px; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Friend Requests</h3>
+      <div id="requestsList"></div>
+    </div>
 
     <div class="friends-grid" id="friendsGrid">
       <!-- Populated by JS -->
     </div>
+  </div>
+
+  <!-- Bug: friend search section — no CSS applied, stuck at bottom-left, looks like raw unstyled HTML -->
+  <div style="position:fixed; bottom:12px; left:12px; z-index:999;">
+    <form onsubmit="searchFriend(event)">
+      <p>Search Friends</p>
+      <input type="text" id="searchInput" name="q" />
+      <input type="submit" value="Search" />
+      <ul id="searchResults"></ul>
+    </form>
   </div>
 
   <!-- Navigation stuck at bottom-right corner -->
@@ -22,7 +39,7 @@
     <a href="friends.html" class="active">Friends</a>
     <!-- Bug: My Profile links to friends.html instead of profile.html -->
     <a href="friends.html">My Profile</a>
-    <a href="settings.html">Settings</a>
+    <a href="#" onclick="alert('Error: Settings failed to load. Please try again later.'); return false;">Settings</a>
   </nav>
 
   <script>
@@ -49,6 +66,15 @@
             <div class="friend-avatar">${f.initial}</div>
             <p>${f.name}</p>
             <span>${f.status}</span>
+            <div style="margin-top:10px;">
+              <!-- Bug: shows "Request sent!" but no notification ever appears on the receiver side -->
+              <button
+                onclick="sendRequest(this, '${f.name}')"
+                style="padding:6px 12px; font-size:12px; background:#667eea; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+                Add Friend
+              </button>
+              <span class="req-sent" style="display:none; font-size:11px; color:#27ae60; margin-left:6px;">Request sent!</span>
+            </div>
           </div>
         `).join('');
       } catch (err) {
@@ -56,7 +82,118 @@
       }
     }
 
+    // Bug: shows success UI feedback but does nothing on the backend
+    function sendRequest(btn, name) {
+      btn.disabled = true;
+      btn.style.opacity = '0.4';
+      btn.nextElementSibling.style.display = 'inline';
+    }
+
+    async function loadFriendRequests() {
+      try {
+        const res = await fetch('/api/friends/requests', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const requests = await res.json();
+        if (!requests.length) return;
+
+        document.getElementById('requestsSection').style.display = 'block';
+        document.getElementById('requestsList').innerHTML = requests.map(r => `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f5f5f5;">
+            <span style="font-size:14px; color:#333;">${r.from} <span style="color:#aaa; font-size:12px;">@${r.fromUsername}</span></span>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+              <span style="font-size:11px; color:#27ae60; background:#f0fff4; padding:4px 10px; border-radius:12px;">Request received</span>
+              <!-- Bug: accept button is weird — rotated, oddly labeled, shoved to a strange spot -->
+              <button
+                id="accept-${r.id}"
+                onclick="acceptRequest('${r.id}', this)"
+                style="
+                  font-size:9px;
+                  padding:6px 4px;
+                  width:72px;
+                  background: #c8f7c5;
+                  color: #1a6b18;
+                  border: 2px dotted #f39c12;
+                  border-radius: 12px 0 12px 0;
+                  cursor: pointer;
+                  transform: rotate(6deg);
+                  margin-top: 6px;
+                  margin-right: -10px;
+                  letter-spacing: 1px;
+                  line-height: 1.4;
+                ">...ok<br>fine</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load friend requests:', err);
+      }
+    }
+
+    async function acceptRequest(id, btn) {
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/friends/requests/${id}/accept`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          btn.closest('div[style*="flex-direction"]').innerHTML +=
+            '<span style="font-size:11px; color:#667eea;">✓ Accepted</span>';
+          btn.remove();
+        } else {
+          btn.insertAdjacentText('afterend', ` ${data.error}`);
+        }
+      } catch (err) {
+        btn.insertAdjacentText('afterend', ' Failed');
+      }
+    }
+
+    async function searchFriend(e) {
+      e.preventDefault();
+      const query = document.getElementById('searchInput').value.trim();
+      const results = document.getElementById('searchResults');
+      if (!query) { results.innerHTML = ''; return; }
+
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const users = await res.json();
+        results.innerHTML = users.length
+          ? users.map(u => `
+              <li style="display:flex; align-items:center; gap:6px; margin:4px 0;">
+                <span>${u.name} (@${u.username})</span>
+                <button onclick="addFriend('${u.username}', this)">Add Friend</button>
+              </li>
+            `).join('')
+          : '<li>No results found</li>';
+      } catch (err) {
+        results.innerHTML = '<li>Search failed</li>';
+      }
+    }
+
+    async function addFriend(username, btn) {
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/friends/request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ toUsername: username }),
+        });
+        const data = await res.json();
+        btn.insertAdjacentText('afterend', res.ok ? ' ✓ Sent' : ` ${data.error}`);
+      } catch (err) {
+        btn.insertAdjacentText('afterend', ' Failed');
+      }
+    }
+
     loadFriends();
+    loadFriendRequests();
   </script>
 </body>
 </html>

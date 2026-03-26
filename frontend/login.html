@@ -7,28 +7,33 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Bug: error message is tiny text at the very top of the page, far from the form -->
+  <p id="topError" style="position:fixed; top:6px; left:8px; font-size:9px; color:#e74c3c; display:none; z-index:999;"></p>
+
   <div class="login-wrapper">
     <div class="login-card">
       <h1>Welcome Back</h1>
-      <p>Sign in to your account to continue.</p>
+      <!-- Bug: subtitle is low contrast, hard to read -->
+      <p style="color:#d0d0d0;">Sign in to your account to continue.</p>
 
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input type="text" id="username" placeholder="Enter your username" required />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="Enter your password" required />
-        </div>
-        <p id="errorMsg" style="color:#e74c3c; font-size:13px; margin-top:10px; display:none;"></p>
+      <div class="form-group">
+        <!-- Bug: label is low contrast -->
+        <label for="username" style="color:#ccc; font-size:11px;">Username</label>
+        <input type="text" id="username" placeholder="Enter your username" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" />
+      </div>
 
-        <div class="weird-btn-wrapper">
-          <button type="submit" class="weird-btn">do&nbsp;the<br>thing??</button>
-        </div>
-      </form>
+      <!-- Bug: Button 1 looks like a normal primary button but does absolutely nothing on click -->
+      <button type="button" tabindex="3" class="login-btn-fake">Login</button>
 
-      <p class="auth-switch">
+      <!-- Bug: Button 2 looks disabled/secondary but is the only one that actually works.
+           tabindex=1 means keyboard focuses this one first, which feels backwards -->
+      <button type="button" tabindex="1" class="login-btn-real" id="realLoginBtn">Login</button>
+
+      <p class="auth-switch" style="margin-top:16px;">
         No account? <a href="signup.html">Create one</a>
       </p>
     </div>
@@ -39,12 +44,20 @@
       window.location.href = 'dashboard.html';
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+    // Bug: fake button does nothing — no handler attached at all
 
+    document.getElementById('realLoginBtn').addEventListener('click', async function () {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      const errorMsg = document.getElementById('errorMsg');
+      const topError = document.getElementById('topError');
+      topError.style.display = 'none';
+
+      if (!username || !password) {
+        // Bug: error appears at top of page, not under the fields
+        topError.textContent = 'Please fill in all fields.';
+        topError.style.display = 'block';
+        return;
+      }
 
       try {
         const res = await fetch('/api/auth/login', {
@@ -55,16 +68,16 @@
 
         const data = await res.json();
         if (!res.ok) {
-          errorMsg.textContent = data.error || 'Login failed';
-          errorMsg.style.display = 'block';
+          topError.textContent = data.error || 'Login failed';
+          topError.style.display = 'block';
           return;
         }
 
         localStorage.setItem('token', data.token);
         window.location.href = 'dashboard.html';
       } catch (err) {
-        errorMsg.textContent = 'Could not connect to server';
-        errorMsg.style.display = 'block';
+        topError.textContent = 'Could not connect to server';
+        topError.style.display = 'block';
       }
     });
   </script>
