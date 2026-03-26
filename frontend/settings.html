@@ -7,29 +7,35 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <nav class="weird-nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="friends.html">Friends</a>
+    <a href="profile.html">My Profile</a>
+    <a href="settings.html" class="active">Settings</a>
+  </nav>
+
   <div class="page-content">
     <h1>Settings</h1>
     <p>Manage your preferences and account configuration.</p>
 
     <div class="settings-section">
       <h2>Notifications</h2>
-      <!-- Bug: double-negative checkbox labels that are confusing to read -->
       <div class="setting-row">
         <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
           <input type="checkbox" checked />
-          Do not disable notification opt-out
-        </label>
-      </div>
-      <div class="setting-row">
-        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
-          <input type="checkbox" />
-          Unsubscribe from non-opt-out alerts
+          Enable notifications
         </label>
       </div>
       <div class="setting-row">
         <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
           <input type="checkbox" checked />
-          Disable disabling of push preferences
+          Receive email alerts
+        </label>
+      </div>
+      <div class="setting-row">
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
+          <input type="checkbox" checked />
+          Enable push notifications
         </label>
       </div>
     </div>
@@ -39,7 +45,7 @@
       <div class="setting-row">
         <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#555; cursor:pointer;">
           <input type="checkbox" />
-          Do not prevent hiding of online status
+          Hide online status
         </label>
       </div>
       <div class="setting-row">
@@ -50,11 +56,15 @@
       </div>
     </div>
 
-    <!-- Bug: "Advanced Settings" section appears to exist but fails to load anything -->
     <div class="settings-section">
-      <h2>Advanced Settings</h2>
-      <div id="advancedArea" style="min-height:60px; display:flex; align-items:center; justify-content:center;">
-        <p style="color:#e74c3c; font-size:12px;">Error: Could not load advanced settings.</p>
+      <h2>Advanced</h2>
+      <div class="setting-row">
+        <span style="font-size:14px; color:#555;">Download my data</span>
+        <button onclick="alert('Feature coming soon')" style="padding:6px 14px; font-size:13px; background:#f0f0f0; color:#555; border:1px solid #ddd; border-radius:6px; cursor:pointer;">Download</button>
+      </div>
+      <div class="setting-row">
+        <span style="font-size:14px; color:#e74c3c;">Delete account</span>
+        <button onclick="confirmDelete()" style="padding:6px 14px; font-size:13px; background:#fff; color:#e74c3c; border:1px solid #e74c3c; border-radius:6px; cursor:pointer;">Delete</button>
       </div>
     </div>
 
@@ -62,20 +72,10 @@
       <h2>Account</h2>
       <div class="setting-row">
         <span>Logged in as <strong id="loggedInUser">—</strong></span>
-        <!-- Bug: Logout is large and prominent; Save (elsewhere) is tiny -->
-        <button onclick="logout()" style="padding:14px 32px; border:none; background:#e74c3c; color:#fff; border-radius:6px; cursor:pointer; font-size:18px; font-weight:900;">LOG OUT</button>
+        <button onclick="logout()" style="padding:8px 18px; border:none; background:#e74c3c; color:#fff; border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">Log out</button>
       </div>
     </div>
   </div>
-
-  <!-- Navigation stuck at bottom-right corner -->
-  <nav class="weird-nav">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="friends.html">Friends</a>
-    <!-- Bug: My Profile links to friends.html instead of profile.html -->
-    <a href="friends.html">My Profile</a>
-    <a href="#" onclick="alert('Error: Settings failed to load. Please try again later.'); return false;" class="active">Settings</a>
-  </nav>
 
   <script>
     const token = localStorage.getItem('token');
@@ -91,6 +91,12 @@
     function logout() {
       localStorage.removeItem('token');
       window.location.href = 'index.html';
+    }
+
+    function confirmDelete() {
+      if (confirm('Are you sure you want to delete your account? This cannot be undone.')) {
+        alert('Feature coming soon');
+      }
     }
   </script>
 </body>

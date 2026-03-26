@@ -7,14 +7,19 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <nav class="weird-nav">
+    <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="friends.html">Friends</a>
+    <a href="profile.html">My Profile</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
   <div class="page-content">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
       <h1 style="margin-bottom:0;">Dashboard</h1>
-      <!-- Bug: Logout button is huge and visually dominant; important actions are tiny -->
-      <button onclick="logout()" style="padding:14px 32px; border:none; background:#e74c3c; color:#fff; border-radius:6px; cursor:pointer; font-size:18px; font-weight:900;">LOG OUT</button>
+      <button onclick="logout()" style="padding:8px 18px; border:none; background:#e74c3c; color:#fff; border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;">Log out</button>
     </div>
-    <!-- Bug: low contrast subtitle -->
-    <p style="color:#ccc; font-size:11px;">Here's an overview of your activity.</p>
+    <p>Here's an overview of your activity.</p>
 
     <div class="card-row">
       <div class="card">
@@ -22,13 +27,8 @@
         <div class="number" id="totalFriends">—</div>
       </div>
       <div class="card">
-        <!-- Bug: inconsistent font size on this card label -->
-        <h3 style="font-size:22px;">Messages</h3>
-        <div class="number" id="messages">—</div>
-      </div>
-      <div class="card">
         <h3>Notifications</h3>
-        <div class="number" id="notifications" style="font-size:11px; color:#999;">—</div>
+        <div class="number" id="notifications">—</div>
       </div>
       <div class="card">
         <h3>Posts</h3>
@@ -42,36 +42,18 @@
       <textarea id="statusInput" rows="3" placeholder="Write a post..."
         style="width:100%; padding:10px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; resize:none; outline:none;"></textarea>
       <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
-        <!-- Bug: button looks clickable but does nothing -->
-        <button onclick="" style="padding:4px 8px; font-size:10px; background:#eee; color:#aaa; border:1px solid #ddd; border-radius:4px; cursor:pointer;">Post</button>
-        <span id="postSuccess" style="font-size:11px; color:#27ae60; display:none;">Posted!</span>
-        <span id="postError" style="font-size:11px; color:#e74c3c; display:none;"></span>
+        <button onclick="submitPost()" style="padding:8px 20px; font-size:14px; background:#667eea; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Post</button>
+        <span id="postSuccess" style="font-size:13px; color:#27ae60; display:none;">Posted!</span>
+        <span id="postError" style="font-size:13px; color:#e74c3c; display:none;"></span>
       </div>
     </div>
 
-    <!-- Feed: posts from self + friends -->
+    <!-- Feed -->
     <div style="margin-top:24px;">
       <h3 style="font-size:14px; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px;">Feed</h3>
       <div id="feedList"></div>
     </div>
-
-    <!-- Bug: "View Activity" looks like it opens a real page but shows an error -->
-    <div style="margin-top:20px;">
-      <button onclick="loadActivity()" style="padding:10px 20px; background:#667eea; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px;">View Activity</button>
-      <div id="activityArea" style="margin-top:12px; display:none; background:#fff; border-radius:10px; padding:20px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
-        <p style="color:#e74c3c; font-size:13px;">Error: Failed to load activity data. Please try again later.</p>
-      </div>
-    </div>
   </div>
-
-  <!-- Navigation stuck at bottom-right corner -->
-  <nav class="weird-nav">
-    <a href="dashboard.html" class="active">Dashboard</a>
-    <a href="friends.html">Friends</a>
-    <!-- Bug: My Profile links to friends.html instead of profile.html -->
-    <a href="friends.html">My Profile</a>
-    <a href="#" onclick="alert('Error: Settings failed to load. Please try again later.'); return false;">Settings</a>
-  </nav>
 
   <script>
     const token = localStorage.getItem('token');
@@ -89,7 +71,6 @@
         }
         const data = await res.json();
         document.getElementById('totalFriends').textContent = data.totalFriends;
-        document.getElementById('messages').textContent = data.messages;
         document.getElementById('notifications').textContent = data.notifications;
         document.getElementById('postCount').textContent = data.posts;
       } catch (err) {
@@ -102,6 +83,11 @@
         const res = await fetch('/api/feed', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'index.html';
+          return;
+        }
         const posts = await res.json();
         const list = document.getElementById('feedList');
 
@@ -114,14 +100,14 @@
           <div style="background:#fff; border-radius:10px; padding:20px; margin-bottom:14px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
               <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#667eea,#764ba2); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:15px; flex-shrink:0;">
-                ${p.author.charAt(0).toUpperCase()}
+                ${escapeHtml(p.author.charAt(0).toUpperCase())}
               </div>
               <div>
-                <p style="font-size:14px; font-weight:600; color:#333; margin:0;">${p.author}</p>
-                <p style="font-size:11px; color:#bbb; margin:0;">@${p.username} · ${formatTime(p.createdAt)}</p>
+                <p style="font-size:14px; font-weight:600; color:#333; margin:0;">${escapeHtml(p.author)}</p>
+                <p style="font-size:11px; color:#bbb; margin:0;">@${escapeHtml(p.username)} · ${formatTime(p.createdAt)}</p>
               </div>
             </div>
-            <p style="font-size:14px; color:#444; line-height:1.6; margin:0;">${p.content}</p>
+            <p style="font-size:14px; color:#444; line-height:1.6; margin:0;">${escapeHtml(p.content)}</p>
           </div>
         `).join('');
       } catch (err) {
@@ -160,10 +146,19 @@
         successMsg.style.display = 'inline';
         setTimeout(() => successMsg.style.display = 'none', 2000);
         loadFeed();
+        loadDashboard();
       } catch (err) {
         errorMsg.textContent = 'Could not connect to server';
         errorMsg.style.display = 'inline';
       }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
     function formatTime(iso) {
@@ -174,11 +169,6 @@
     function logout() {
       localStorage.removeItem('token');
       window.location.href = 'index.html';
-    }
-
-    // Bug: always shows an error, never loads real data
-    function loadActivity() {
-      document.getElementById('activityArea').style.display = 'block';
     }
 
     loadDashboard();

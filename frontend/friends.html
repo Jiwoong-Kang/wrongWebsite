@@ -7,40 +7,37 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <nav class="weird-nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="friends.html" class="active">Friends</a>
+    <a href="profile.html">My Profile</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
   <div class="page-content">
     <h1>Friends</h1>
-    <!-- Bug: low contrast subtitle -->
-    <p style="color:#ccc;">People you are connected with.</p>
+    <p>People you are connected with.</p>
+
+    <!-- Search -->
+    <div style="margin-top:20px; background:#fff; border-radius:10px; padding:20px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+      <h3 style="font-size:14px; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Search Friends</h3>
+      <form onsubmit="searchFriend(event)" style="display:flex; gap:8px;">
+        <input type="text" id="searchInput" name="q" placeholder="Search by name or username..."
+          style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; outline:none;" />
+        <button type="submit"
+          style="padding:10px 20px; background:#667eea; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Search</button>
+      </form>
+      <ul id="searchResults" style="list-style:none; margin-top:12px; padding:0;"></ul>
+    </div>
 
     <!-- Incoming friend requests section -->
-    <div id="requestsSection" style="display:none; background:#fff; border-radius:10px; padding:20px; margin-bottom:24px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+    <div id="requestsSection" style="display:none; background:#fff; border-radius:10px; padding:20px; margin-top:24px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
       <h3 style="font-size:14px; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Friend Requests</h3>
       <div id="requestsList"></div>
     </div>
 
-    <div class="friends-grid" id="friendsGrid">
-      <!-- Populated by JS -->
-    </div>
+    <div class="friends-grid" id="friendsGrid"></div>
   </div>
-
-  <!-- Bug: friend search section — no CSS applied, stuck at bottom-left, looks like raw unstyled HTML -->
-  <div style="position:fixed; bottom:12px; left:12px; z-index:999;">
-    <form onsubmit="searchFriend(event)">
-      <p>Search Friends</p>
-      <input type="text" id="searchInput" name="q" />
-      <input type="submit" value="Search" />
-      <ul id="searchResults"></ul>
-    </form>
-  </div>
-
-  <!-- Navigation stuck at bottom-right corner -->
-  <nav class="weird-nav">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="friends.html" class="active">Friends</a>
-    <!-- Bug: My Profile links to friends.html instead of profile.html -->
-    <a href="friends.html">My Profile</a>
-    <a href="#" onclick="alert('Error: Settings failed to load. Please try again later.'); return false;">Settings</a>
-  </nav>
 
   <script>
     const token = localStorage.getItem('token');
@@ -61,20 +58,16 @@
         const friends = await res.json();
         const grid = document.getElementById('friendsGrid');
 
+        if (!friends.length) {
+          grid.innerHTML = '<p style="color:#bbb; font-size:13px; margin-top:24px;">You have no friends yet. Search for people to connect with!</p>';
+          return;
+        }
+
         grid.innerHTML = friends.map((f) => `
           <div class="friend-card">
-            <div class="friend-avatar">${f.initial}</div>
-            <p>${f.name}</p>
-            <span>${f.status}</span>
-            <div style="margin-top:10px;">
-              <!-- Bug: shows "Request sent!" but no notification ever appears on the receiver side -->
-              <button
-                onclick="sendRequest(this, '${f.name}')"
-                style="padding:6px 12px; font-size:12px; background:#667eea; color:#fff; border:none; border-radius:6px; cursor:pointer;">
-                Add Friend
-              </button>
-              <span class="req-sent" style="display:none; font-size:11px; color:#27ae60; margin-left:6px;">Request sent!</span>
-            </div>
+            <div class="friend-avatar">${escapeHtml(f.initial)}</div>
+            <p>${escapeHtml(f.name)}</p>
+            <span>${escapeHtml(f.status)}</span>
           </div>
         `).join('');
       } catch (err) {
@@ -82,47 +75,31 @@
       }
     }
 
-    // Bug: shows success UI feedback but does nothing on the backend
-    function sendRequest(btn, name) {
-      btn.disabled = true;
-      btn.style.opacity = '0.4';
-      btn.nextElementSibling.style.display = 'inline';
-    }
-
     async function loadFriendRequests() {
       try {
         const res = await fetch('/api/friends/requests', {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'index.html';
+          return;
+        }
+
         const requests = await res.json();
         if (!requests.length) return;
 
         document.getElementById('requestsSection').style.display = 'block';
         document.getElementById('requestsList').innerHTML = requests.map(r => `
           <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f5f5f5;">
-            <span style="font-size:14px; color:#333;">${r.from} <span style="color:#aaa; font-size:12px;">@${r.fromUsername}</span></span>
-            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
-              <span style="font-size:11px; color:#27ae60; background:#f0fff4; padding:4px 10px; border-radius:12px;">Request received</span>
-              <!-- Bug: accept button is weird — rotated, oddly labeled, shoved to a strange spot -->
-              <button
-                id="accept-${r.id}"
-                onclick="acceptRequest('${r.id}', this)"
-                style="
-                  font-size:9px;
-                  padding:6px 4px;
-                  width:72px;
-                  background: #c8f7c5;
-                  color: #1a6b18;
-                  border: 2px dotted #f39c12;
-                  border-radius: 12px 0 12px 0;
-                  cursor: pointer;
-                  transform: rotate(6deg);
-                  margin-top: 6px;
-                  margin-right: -10px;
-                  letter-spacing: 1px;
-                  line-height: 1.4;
-                ">...ok<br>fine</button>
-            </div>
+            <span style="font-size:14px; color:#333;">${escapeHtml(r.from)} <span style="color:#aaa; font-size:12px;">@${escapeHtml(r.fromUsername)}</span></span>
+            <button
+              id="accept-${r.id}"
+              onclick="acceptRequest('${r.id}', this)"
+              style="padding:6px 16px; font-size:13px; background:#667eea; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">
+              Accept
+            </button>
           </div>
         `).join('');
       } catch (err) {
@@ -139,13 +116,17 @@
         });
         const data = await res.json();
         if (res.ok) {
-          btn.closest('div[style*="flex-direction"]').innerHTML +=
-            '<span style="font-size:11px; color:#667eea;">✓ Accepted</span>';
-          btn.remove();
+          btn.replaceWith(Object.assign(document.createElement('span'), {
+            textContent: '✓ Accepted',
+            style: 'font-size:13px; color:#27ae60; font-weight:600;',
+          }));
+          loadFriends();
         } else {
+          btn.disabled = false;
           btn.insertAdjacentText('afterend', ` ${data.error}`);
         }
       } catch (err) {
+        btn.disabled = false;
         btn.insertAdjacentText('afterend', ' Failed');
       }
     }
@@ -160,17 +141,27 @@
         const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'index.html';
+          return;
+        }
+
         const users = await res.json();
         results.innerHTML = users.length
           ? users.map(u => `
-              <li style="display:flex; align-items:center; gap:6px; margin:4px 0;">
-                <span>${u.name} (@${u.username})</span>
-                <button onclick="addFriend('${u.username}', this)">Add Friend</button>
+              <li style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f5f5f5;">
+                <span style="font-size:14px; color:#333;">${escapeHtml(u.name)} <span style="color:#aaa; font-size:12px;">@${escapeHtml(u.username)}</span></span>
+                <button onclick="addFriend('${escapeHtml(u.username)}', this)"
+                  style="padding:6px 14px; font-size:13px; background:#667eea; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">
+                  Add Friend
+                </button>
               </li>
             `).join('')
-          : '<li>No results found</li>';
+          : '<li style="font-size:13px; color:#aaa; padding:8px 0;">No results found</li>';
       } catch (err) {
-        results.innerHTML = '<li>Search failed</li>';
+        results.innerHTML = '<li style="font-size:13px; color:#e74c3c;">Search failed</li>';
       }
     }
 
@@ -186,10 +177,27 @@
           body: JSON.stringify({ toUsername: username }),
         });
         const data = await res.json();
-        btn.insertAdjacentText('afterend', res.ok ? ' ✓ Sent' : ` ${data.error}`);
+        if (res.ok) {
+          btn.replaceWith(Object.assign(document.createElement('span'), {
+            textContent: '✓ Request sent',
+            style: 'font-size:13px; color:#27ae60; font-weight:600;',
+          }));
+        } else {
+          btn.disabled = false;
+          btn.textContent = data.error || 'Failed';
+        }
       } catch (err) {
-        btn.insertAdjacentText('afterend', ' Failed');
+        btn.disabled = false;
+        btn.textContent = 'Failed';
       }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
     loadFriends();

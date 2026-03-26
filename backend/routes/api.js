@@ -1,6 +1,5 @@
 const express = require('express');
 const User = require('../models/User');
-const Friend = require('../models/Friend');
 const FriendRequest = require('../models/FriendRequest');
 const Post = require('../models/Post');
 const { requireAuth } = require('../middleware/auth');
@@ -8,15 +7,16 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 router.get('/dashboard', requireAuth, async (req, res) => {
-  const [me, postCount, pendingRequests] = await Promise.all([
-    User.findById(req.user.id, 'friends'),
+  const me = await User.findById(req.user.id, 'friends');
+  if (!me) return res.status(404).json({ error: 'User not found' });
+
+  const [postCount, pendingRequests] = await Promise.all([
     Post.countDocuments({ author: req.user.id }),
     FriendRequest.countDocuments({ to: req.user.id, status: 'pending' }),
   ]);
 
   res.json({
     totalFriends:  me.friends.length,
-    messages:      0,
     notifications: pendingRequests,
     posts:         postCount,
   });
@@ -24,6 +24,8 @@ router.get('/dashboard', requireAuth, async (req, res) => {
 
 router.get('/friends', requireAuth, async (req, res) => {
   const me = await User.findById(req.user.id, 'friends').populate('friends', 'username name');
+  if (!me) return res.status(404).json({ error: 'User not found' });
+
   const friends = me.friends.map(f => ({
     name: f.name,
     initial: f.name.charAt(0).toUpperCase(),
@@ -35,7 +37,6 @@ router.get('/friends', requireAuth, async (req, res) => {
 
 router.get('/profile', requireAuth, async (req, res) => {
   const user = await User.findById(req.user.id, '-password -__v');
-
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   const postCount = await Post.countDocuments({ author: user._id });
@@ -46,19 +47,36 @@ router.get('/profile', requireAuth, async (req, res) => {
     initial: user.name.charAt(0).toUpperCase(),
     posts: postCount,
     friends: user.friends.length,
-    likes: 389,
   });
+});
+
+router.put('/profile', requireAuth, async (req, res) => {
+  const { name, bio } = req.body;
+  const update = {};
+  if (name && name.trim()) update.name = name.trim();
+  if (bio !== undefined) update.bio = bio.trim();
+
+  if (!Object.keys(update).length) {
+    return res.status(400).json({ error: 'Nothing to update' });
+  }
+
+  const user = await User.findByIdAndUpdate(req.user.id, update, { new: true });
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  res.json({ message: 'Profile updated' });
 });
 
 router.get('/users/search', requireAuth, async (req, res) => {
   const q = (req.query.q || '').trim();
   if (!q) return res.json([]);
 
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   const users = await User.find(
     {
       $or: [
-        { username: { $regex: q, $options: 'i' } },
-        { name: { $regex: q, $options: 'i' } },
+        { username: { $regex: escaped, $options: 'i' } },
+        { name: { $regex: escaped, $options: 'i' } },
       ],
       _id: { $ne: req.user.id },
     },
@@ -68,7 +86,6 @@ router.get('/users/search', requireAuth, async (req, res) => {
   res.json(users);
 });
 
-// Send a friend request
 router.post('/friends/request', requireAuth, async (req, res) => {
   const { toUsername } = req.body;
 
@@ -92,7 +109,6 @@ router.post('/friends/request', requireAuth, async (req, res) => {
   }
 });
 
-// Accept a friend request
 router.post('/friends/requests/:id/accept', requireAuth, async (req, res) => {
   const request = await FriendRequest.findOne({ _id: req.params.id, to: req.user.id });
   if (!request) return res.status(404).json({ error: 'Request not found' });
@@ -100,14 +116,12 @@ router.post('/friends/requests/:id/accept', requireAuth, async (req, res) => {
   request.status = 'accepted';
   await request.save();
 
-  // Add each user to the other's friends array (avoid duplicates)
-  await User.findByIdAndUpdate(req.user.id,      { $addToSet: { friends: request.from } });
-  await User.findByIdAndUpdate(request.from,     { $addToSet: { friends: req.user.id } });
+  await User.findByIdAndUpdate(req.user.id,  { $addToSet: { friends: request.from } });
+  await User.findByIdAndUpdate(request.from, { $addToSet: { friends: req.user.id } });
 
   res.json({ message: 'Friend request accepted' });
 });
 
-// Get incoming pending friend requests for the logged-in user
 router.get('/friends/requests', requireAuth, async (req, res) => {
   const requests = await FriendRequest.find({ to: req.user.id, status: 'pending' })
     .populate('from', 'username name')
@@ -121,7 +135,6 @@ router.get('/friends/requests', requireAuth, async (req, res) => {
   })));
 });
 
-// Create a post
 router.post('/posts', requireAuth, async (req, res) => {
   const { content } = req.body;
   if (!content || !content.trim()) {
@@ -132,9 +145,10 @@ router.post('/posts', requireAuth, async (req, res) => {
   res.status(201).json(post);
 });
 
-// Get feed — posts from self + friends, newest first
 router.get('/feed', requireAuth, async (req, res) => {
   const me = await User.findById(req.user.id, 'friends');
+  if (!me) return res.status(404).json({ error: 'User not found' });
+
   const authorIds = [me._id, ...me.friends];
 
   const posts = await Post.find({ author: { $in: authorIds } })

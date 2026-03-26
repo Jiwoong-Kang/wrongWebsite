@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
   username:    { type: String, required: true, unique: true, trim: true },
   password:    { type: String, required: true },
   name:        { type: String, required: true },
+  bio:         { type: String, default: '' },
   memberSince: { type: String, default: () => new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) },
   friends:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 });

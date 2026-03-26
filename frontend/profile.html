@@ -7,11 +7,17 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <nav class="weird-nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="friends.html">Friends</a>
+    <a href="profile.html" class="active">My Profile</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
   <div class="page-content">
     <h1>My Profile</h1>
     <p>Your personal information.</p>
 
-    <!-- Bug: on mobile ≤360px, profile-avatar overlaps the buttons below via CSS -->
     <div class="profile-header">
       <div class="profile-avatar" id="profileInitial">—</div>
       <div class="profile-info">
@@ -29,13 +35,8 @@
         <h3>Friends</h3>
         <div class="number" id="profileFriends">—</div>
       </div>
-      <div class="card">
-        <h3>Likes</h3>
-        <div class="number" id="profileLikes">—</div>
-      </div>
     </div>
 
-    <!-- Bug: fake save — shows "Saved!" but data reverts when you navigate away and come back -->
     <div style="margin-top:28px; background:#fff; border-radius:10px; padding:24px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
       <h3 style="font-size:14px; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px;">Edit Profile</h3>
 
@@ -50,21 +51,14 @@
           style="width:100%; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; resize:none; outline:none;"></textarea>
       </div>
 
+      <p id="saveError" style="font-size:13px; color:#e74c3c; margin-top:8px; display:none;"></p>
+
       <div style="display:flex; align-items:center; gap:10px; margin-top:12px;">
-        <!-- Bug: Save is tiny and subtle — important action is visually de-emphasized -->
-        <button onclick="fakeSave()" style="padding:4px 8px; font-size:10px; background:#eee; color:#aaa; border:1px solid #ddd; border-radius:4px; cursor:pointer;">Save</button>
-        <span id="saveSuccess" style="font-size:11px; color:#27ae60; display:none;">Saved!</span>
+        <button onclick="saveProfile()" style="padding:8px 20px; font-size:14px; background:#667eea; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Save</button>
+        <span id="saveSuccess" style="font-size:13px; color:#27ae60; display:none;">Saved!</span>
       </div>
     </div>
   </div>
-
-  <!-- Navigation stuck at bottom-right corner -->
-  <nav class="weird-nav">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="friends.html">Friends</a>
-    <a href="friends.html">My Profile</a>
-    <a href="#" onclick="alert('Error: Settings failed to load. Please try again later.'); return false;">Settings</a>
-  </nav>
 
   <script>
     const token = localStorage.getItem('token');
@@ -88,22 +82,46 @@
         document.getElementById('profileSince').textContent = `Member since ${data.memberSince}`;
         document.getElementById('profilePosts').textContent = data.posts;
         document.getElementById('profileFriends').textContent = data.friends;
-        document.getElementById('profileLikes').textContent = data.likes;
       } catch (err) {
         console.error('Failed to load profile:', err);
       }
     }
 
-    // Bug: shows "Saved!" but inputs are just cleared — nothing is sent to the backend
-    function fakeSave() {
-      const name = document.getElementById('editName').value;
-      const bio = document.getElementById('editBio').value;
+    async function saveProfile() {
+      const name = document.getElementById('editName').value.trim();
+      const bio = document.getElementById('editBio').value.trim();
+      const successMsg = document.getElementById('saveSuccess');
+      const errorMsg = document.getElementById('saveError');
+      successMsg.style.display = 'none';
+      errorMsg.style.display = 'none';
+
       if (!name && !bio) return;
-      document.getElementById('editName').value = '';
-      document.getElementById('editBio').value = '';
-      const msg = document.getElementById('saveSuccess');
-      msg.style.display = 'inline';
-      setTimeout(() => msg.style.display = 'none', 2000);
+
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name, bio }),
+        });
+
+        if (res.ok) {
+          document.getElementById('editName').value = '';
+          document.getElementById('editBio').value = '';
+          successMsg.style.display = 'inline';
+          setTimeout(() => successMsg.style.display = 'none', 2000);
+          loadProfile();
+        } else {
+          const data = await res.json();
+          errorMsg.textContent = data.error || 'Failed to save';
+          errorMsg.style.display = 'block';
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Could not connect to server';
+        errorMsg.style.display = 'block';
+      }
     }
 
     loadProfile();

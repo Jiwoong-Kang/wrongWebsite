@@ -100,46 +100,10 @@ body {
   border-color: #667eea;
 }
 
-/* ── WEIRD LOGIN BUTTON ─────────────────────────────────── */
-.weird-btn-wrapper {
-  margin-top: 28px;
-  display: flex;
-  justify-content: flex-end; /* shoved to the right — not centered */
-}
-
-.weird-btn {
-  background: linear-gradient(90deg, #f7971e, #ffd200, #f7971e);
-  background-size: 200% auto;
-  color: #1a1a1a;
-  font-size: 11px;            /* unusually small text */
-  font-weight: 900;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  padding: 18px 10px;         /* tall & narrow — awkward proportions */
-  border: 3px dashed #c0392b; /* dashed red border makes no sense */
-  border-radius: 50% 0 50% 0; /* asymmetric bubble shape */
-  cursor: pointer;
-  transform: rotate(-7deg);   /* tilted */
-  width: 90px;
-  line-height: 1.3;
-  animation: pulse-btn 2s infinite;
-  transition: transform 0.2s;
-}
-
-.weird-btn:hover {
-  transform: rotate(5deg) scale(1.1);
-  animation: none;
-}
-
-@keyframes pulse-btn {
-  0%   { transform: rotate(-7deg) scale(1); }
-  50%  { transform: rotate(-7deg) scale(1.06); }
-  100% { transform: rotate(-7deg) scale(1); }
-}
 
 /* ── SHARED INNER LAYOUT ────────────────────────────────── */
 .page-content {
-  padding: 48px;
+  padding: 80px 48px 48px;
   max-width: 900px;
   margin: 0 auto;
 }
@@ -186,29 +150,28 @@ body {
   color: #667eea;
 }
 
-/* ── WEIRD NAVIGATION MENU ──────────────────────────────── */
+/* ── NAVIGATION ─────────────────────────────────────────── */
 .weird-nav {
   position: fixed;
-  bottom: 20px;   /* stuck at bottom-right — definitely wrong */
-  right: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
   background: #1a1a2e;
-  border-radius: 14px;
-  padding: 12px 8px;
+  padding: 0 32px;
+  height: 56px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 4px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   z-index: 1000;
-  width: 130px;
 }
 
 .weird-nav a {
-  display: block;
   color: #ccc;
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
-  padding: 10px 14px;
+  padding: 8px 14px;
   border-radius: 8px;
   transition: background 0.2s, color 0.2s;
 }
@@ -344,10 +307,8 @@ body {
   margin-top: 4px;
 }
 
-/* ── TWO LOGIN BUTTONS ──────────────────────────────────── */
-
-/* Bug: looks like the real primary button but does absolutely nothing */
-.login-btn-fake {
+/* ── LOGIN BUTTON ───────────────────────────────────────── */
+.login-btn {
   display: block;
   width: 100%;
   margin-top: 20px;
@@ -359,39 +320,29 @@ body {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-/* Bug: looks disabled/unimportant but is the only one that actually works */
-.login-btn-real {
-  display: block;
-  width: 100%;
-  margin-top: 6px;
-  padding: 5px;
-  background: #f0f0f0;
-  color: #bbb;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 11px;
-  cursor: not-allowed;
-  opacity: 0.55;
+.login-btn:hover {
+  background: #5a6fd6;
 }
 
-/* ── MOBILE OVERFLOW BUGS (≤360px) ──────────────────────── */
+/* ── MOBILE (≤360px) ─────────────────────────────────────── */
 @media (max-width: 360px) {
-  /* Bug: profile avatar becomes position:absolute and overlaps the buttons below */
-  .profile-avatar {
-    position: absolute;
-    z-index: 10;
-    top: 60px;
+  .page-content {
+    padding: 72px 16px 24px;
   }
 
-  /* Bug: cards don't wrap — they overflow outside the screen */
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
   .card-row {
-    flex-wrap: nowrap;
-    overflow: visible;
+    flex-wrap: wrap;
   }
 
   .card {
-    min-width: 220px;
+    min-width: 100%;
   }
 }
