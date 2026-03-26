@@ -104,24 +104,31 @@
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
               <span style="font-size:11px; color:#27ae60; background:#f0fff4; padding:4px 10px; border-radius:12px;">Request received</span>
               <!-- Bug: accept button is weird — rotated, oddly labeled, shoved to a strange spot -->
+              <!-- Bug: accept button looks like a crumpled post-it note, heavily tilted -->
               <button
                 id="accept-${r.id}"
                 onclick="acceptRequest('${r.id}', this)"
                 style="
-                  font-size:9px;
-                  padding:6px 4px;
-                  width:72px;
-                  background: #c8f7c5;
-                  color: #1a6b18;
-                  border: 2px dotted #f39c12;
-                  border-radius: 12px 0 12px 0;
+                  font-size:10px;
+                  font-family:'Courier New', monospace;
+                  font-weight:700;
+                  padding:10px 8px;
+                  width:68px;
+                  background: #fffde7;
+                  color: #5d4037;
+                  border: none;
+                  border-bottom: 4px solid #f9a825;
+                  border-left: 2px solid #f9a825;
+                  border-radius: 2px 8px 2px 2px;
+                  box-shadow: 3px 4px 8px rgba(0,0,0,0.25);
                   cursor: pointer;
-                  transform: rotate(6deg);
-                  margin-top: 6px;
-                  margin-right: -10px;
-                  letter-spacing: 1px;
-                  line-height: 1.4;
-                ">...ok<br>fine</button>
+                  transform: rotate(-15deg);
+                  margin-top: 8px;
+                  margin-right: 4px;
+                  letter-spacing: 0.5px;
+                  line-height: 1.5;
+                  text-align:center;
+                ">sure<br>why not</button>
             </div>
           </div>
         `).join('');
