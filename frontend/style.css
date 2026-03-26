@@ -40,6 +40,40 @@ body {
   margin-bottom: 32px;
 }
 
+.entry-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entry-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background: #1a1a2e;
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.entry-btn.alt {
+  background: #667eea;
+}
+
+.auth-switch {
+  margin-top: 22px;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.auth-switch a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
 .form-group {
   margin-bottom: 20px;
 }

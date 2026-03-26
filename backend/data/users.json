@@ -2,9 +2,15 @@
   {
     "id": 1,
     "username": "kang",
-    "password": "password123",
+    "password": "test123",
     "name": "Kang",
-    "email": "kang@example.com",
     "memberSince": "January 2024"
+  },
+  {
+    "id": 2,
+    "username": "hello",
+    "password": "hello2",
+    "name": "hello",
+    "memberSince": "March 2026"
   }
 ]

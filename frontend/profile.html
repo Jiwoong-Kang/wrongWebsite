@@ -15,7 +15,6 @@
       <div class="profile-avatar" id="profileInitial">—</div>
       <div class="profile-info">
         <h2 id="profileName">—</h2>
-        <p id="profileEmail">—</p>
         <p id="profileSince">—</p>
       </div>
     </div>
@@ -64,7 +63,6 @@
         const data = await res.json();
         document.getElementById('profileInitial').textContent = data.initial;
         document.getElementById('profileName').textContent = data.name;
-        document.getElementById('profileEmail').textContent = data.email;
         document.getElementById('profileSince').textContent = `Member since ${data.memberSince}`;
         document.getElementById('profilePosts').textContent = data.posts;
         document.getElementById('profileFriends').textContent = data.friends;

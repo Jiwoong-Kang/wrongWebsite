@@ -30,7 +30,6 @@ router.get('/profile', requireAuth, (req, res) => {
 
   res.json({
     name: user.name,
-    email: user.email,
     memberSince: user.memberSince,
     initial: user.name.charAt(0).toUpperCase(),
     posts: 142,
