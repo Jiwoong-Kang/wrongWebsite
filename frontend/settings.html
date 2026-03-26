@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-content">
+    <h1>Settings</h1>
+    <p>Manage your preferences and account configuration.</p>
+
+    <div class="settings-section">
+      <h2>Notifications</h2>
+      <div class="setting-row">
+        <span>Email notifications</span>
+        <div class="toggle"></div>
+      </div>
+      <div class="setting-row">
+        <span>Push notifications</span>
+        <div class="toggle"></div>
+      </div>
+      <div class="setting-row">
+        <span>Friend requests</span>
+        <div class="toggle"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>Privacy</h2>
+      <div class="setting-row">
+        <span>Show online status</span>
+        <div class="toggle"></div>
+      </div>
+      <div class="setting-row">
+        <span>Public profile</span>
+        <div class="toggle"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>Account</h2>
+      <div class="setting-row">
+        <span>Logged in as <strong id="loggedInUser">—</strong></span>
+        <button onclick="logout()" style="padding:8px 16px; border:none; background:#e74c3c; color:#fff; border-radius:6px; cursor:pointer; font-size:13px;">Log out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation stuck at bottom-right corner -->
+  <nav class="weird-nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="friends.html">Friends</a>
+    <!-- Bug: My Profile links to friends.html instead of profile.html -->
+    <a href="friends.html">My Profile</a>
+    <a href="settings.html" class="active">Settings</a>
+  </nav>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'index.html';
+
+    // Decode JWT payload to get username (no verification needed client-side)
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      document.getElementById('loggedInUser').textContent = payload.username;
+    } catch (e) {
+      document.getElementById('loggedInUser').textContent = 'unknown';
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

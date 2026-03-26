@@ -1,0 +1,8 @@
+[
+  { "id": 1, "name": "Alice",   "initial": "A", "status": "Online"  },
+  { "id": 2, "name": "Bob",     "initial": "B", "status": "Offline" },
+  { "id": 3, "name": "Charlie", "initial": "C", "status": "Online"  },
+  { "id": 4, "name": "Diana",   "initial": "D", "status": "Away"    },
+  { "id": 5, "name": "Ethan",   "initial": "E", "status": "Online"  },
+  { "id": 6, "name": "Fiona",   "initial": "F", "status": "Offline" }
+]

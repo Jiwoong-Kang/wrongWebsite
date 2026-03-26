@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-content">
+    <h1>Dashboard</h1>
+    <p>Here's an overview of your activity.</p>
+
+    <div class="card-row">
+      <div class="card">
+        <h3>Total Friends</h3>
+        <div class="number" id="totalFriends">—</div>
+      </div>
+      <div class="card">
+        <h3>Messages</h3>
+        <div class="number" id="messages">—</div>
+      </div>
+      <div class="card">
+        <h3>Notifications</h3>
+        <div class="number" id="notifications">—</div>
+      </div>
+      <div class="card">
+        <h3>Posts</h3>
+        <div class="number" id="posts">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation stuck at bottom-right corner -->
+  <nav class="weird-nav">
+    <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="friends.html">Friends</a>
+    <!-- Bug: My Profile links to friends.html instead of profile.html -->
+    <a href="friends.html">My Profile</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'index.html';
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        const data = await res.json();
+        document.getElementById('totalFriends').textContent = data.totalFriends;
+        document.getElementById('messages').textContent = data.messages;
+        document.getElementById('notifications').textContent = data.notifications;
+        document.getElementById('posts').textContent = data.posts;
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

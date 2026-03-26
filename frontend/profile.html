@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-content">
+    <h1>My Profile</h1>
+    <p>Your personal information.</p>
+
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileInitial">—</div>
+      <div class="profile-info">
+        <h2 id="profileName">—</h2>
+        <p id="profileEmail">—</p>
+        <p id="profileSince">—</p>
+      </div>
+    </div>
+
+    <div class="card-row" style="margin-top: 24px;">
+      <div class="card">
+        <h3>Posts</h3>
+        <div class="number" id="profilePosts">—</div>
+      </div>
+      <div class="card">
+        <h3>Friends</h3>
+        <div class="number" id="profileFriends">—</div>
+      </div>
+      <div class="card">
+        <h3>Likes</h3>
+        <div class="number" id="profileLikes">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation stuck at bottom-right corner -->
+  <!-- Note: this page is never reached via "My Profile" — that link goes to friends.html -->
+  <nav class="weird-nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="friends.html">Friends</a>
+    <a href="friends.html">My Profile</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'index.html';
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        const data = await res.json();
+        document.getElementById('profileInitial').textContent = data.initial;
+        document.getElementById('profileName').textContent = data.name;
+        document.getElementById('profileEmail').textContent = data.email;
+        document.getElementById('profileSince').textContent = `Member since ${data.memberSince}`;
+        document.getElementById('profilePosts').textContent = data.posts;
+        document.getElementById('profileFriends').textContent = data.friends;
+        document.getElementById('profileLikes').textContent = data.likes;
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+      }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

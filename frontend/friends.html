@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friends</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-content">
+    <h1>Friends</h1>
+    <p>People you are connected with.</p>
+
+    <div class="friends-grid" id="friendsGrid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- Navigation stuck at bottom-right corner -->
+  <nav class="weird-nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="friends.html" class="active">Friends</a>
+    <!-- Bug: My Profile links to friends.html instead of profile.html -->
+    <a href="friends.html">My Profile</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'index.html';
+
+    async function loadFriends() {
+      try {
+        const res = await fetch('/api/friends', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        const friends = await res.json();
+        const grid = document.getElementById('friendsGrid');
+
+        grid.innerHTML = friends.map((f) => `
+          <div class="friend-card">
+            <div class="friend-avatar">${f.initial}</div>
+            <p>${f.name}</p>
+            <span>${f.status}</span>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load friends:', err);
+      }
+    }
+
+    loadFriends();
+  </script>
+</body>
+</html>
